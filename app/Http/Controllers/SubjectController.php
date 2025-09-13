@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
+use App\Models\Student_subject;
+use App\Models\Teacher;
 use App\Models\Teacher__subject;
 use Illuminate\Http\Request;
 
@@ -53,5 +55,29 @@ class SubjectController extends Controller
             'message' => 'Successfully Assign to Teacher',
             'teacherSubject' => $subjectOfTeacher 
         ]);
+   }
+
+   public function studentSubject(Request $request) {
+        $validatedData = $request->validate([
+            'subject_id' => 'required|exists:subjects,id',
+            'student_id' => 'required|exists:students,id'
+        ]);
+
+        $teacher = $request->user();
+
+        if(!$teacher instanceof Teacher) {
+            return response()->json([
+                'message' => 'Unauthenticated. Only Teacher can assign subject to students'
+            ]);
+        }
+
+        $studentSubject = Student_subject::create($validatedData);
+
+
+        return response()->json([
+            'message' => 'Successfully Assign to Student',
+            'subject' => $studentSubject
+        ]);
+
    }
 }
