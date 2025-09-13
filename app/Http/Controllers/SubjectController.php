@@ -4,24 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use App\Models\Student_subject;
+use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\Teacher__subject;
 use Illuminate\Http\Request;
 
 class SubjectController extends Controller
 {
-   public function addSubject(Request $request) {
+    public function addSubject(Request $request)
+    {
         $validatedData = $request->validate([
             'subject_name' => 'required'
         ]);
 
-        
+
         $admin = $request->user();
 
-        if(!$admin instanceof Admin) {
+        if (!$admin instanceof Admin) {
             return response()->json([
                 'message' => 'Unauthenticated. Only Admin can add subjects'
-            ]);
+            ],401);
+        }
+
+        $checkSubject = Subject::where('subject_name',$request->subject_name)->first();
+
+        if($checkSubject) {
+            return response()->json([
+                'message' => 'Subject Already Exists'
+            ],500);
         }
 
         $subject = $admin->subject()->create([
@@ -32,43 +42,66 @@ class SubjectController extends Controller
         return response()->json([
             'message' => 'Successfully added Subject',
             'subject' => $subject
-        ]);
-   }
+        ],200);
+    }
 
-   public function assignSubjectTeacher(Request $request) {
+    public function assignSubjectTeacher(Request $request)
+    {
         $validatedData = $request->validate([
-            'teacher_id' => 'required|exists:teachers,id',
-            'subject_id' => 'required|exists:subjects,id'
+            'teacher_id' => 'required',
+            'subject_id' => 'required'
         ]);
+
 
         $admin = $request->user();
 
-        if(!$admin instanceof Admin) {
+        if (!$admin instanceof Admin) {
             return response()->json([
                 'message' => 'Unauthenticated. Only Admin can Assign a Subject to a Teacher'
-            ]);
+            ],401);
+        }
+
+        $checkSubject = Teacher__subject::where('subject_id', $request->subject_id)
+                                        ->where('teacher_id', $request->teacher_id)
+                                        ->get();
+
+        if (count($checkSubject)) {
+            return response()->json([
+                'message' => 'Already Exist subject'
+            ], 500);
         }
 
         $subjectOfTeacher = Teacher__subject::create($validatedData);
 
         return response()->json([
             'message' => 'Successfully Assign to Teacher',
-            'teacherSubject' => $subjectOfTeacher 
+            'teacherSubject' => $subjectOfTeacher
         ]);
-   }
+    }
 
-   public function studentSubject(Request $request) {
+    public function studentSubject(Request $request)
+    {
         $validatedData = $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'student_id' => 'required|exists:students,id'
+            'subject_id' => 'required',
+            'student_id' => 'required'
         ]);
 
         $teacher = $request->user();
 
-        if(!$teacher instanceof Teacher) {
+        if (!$teacher instanceof Teacher) {
             return response()->json([
                 'message' => 'Unauthenticated. Only Teacher can assign subject to students'
-            ]);
+            ],401);
+        }
+
+         $checkSubject = Student_subject::where('subject_id', $request->subject_id)
+                                        ->where('student_id', $request->student_id)
+                                        ->get();
+
+        if (count($checkSubject)) {
+            return response()->json([
+                'message' => 'Already Exist subject'
+            ], 500);
         }
 
         $studentSubject = Student_subject::create($validatedData);
@@ -77,7 +110,6 @@ class SubjectController extends Controller
         return response()->json([
             'message' => 'Successfully Assign to Student',
             'subject' => $studentSubject
-        ]);
-
-   }
+        ],200);
+    }
 }

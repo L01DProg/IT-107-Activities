@@ -10,7 +10,8 @@ class Activity extends Model
     protected $fillable = [
         'title',
         'description',
-        'submission'
+        'submission',
+        'subject_id'
     ];
 
     public function subjects(): BelongsTo{

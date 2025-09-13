@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
@@ -24,7 +25,10 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::post('/teacher/registration',[TeacherController::class, 'teacherRegister']);
     Route::post('/teacher/logout',[TeacherController::class, 'teacherSignOut']);
     Route::post('/assign/subject/teacher',[SubjectController::class, 'assignSubjectTeacher']);
+    Route::get('/teacher/subject/{id}',[TeacherController::class, 'viewSubject']);
     Route::post('/assign/subject/student',[SubjectController::class, 'studentSubject']);
     Route::post('/student/register',[StudentController::class, 'studentRegister']);
     Route::post('/student/logout',[StudentController::class, 'studentSignOut']);
+    Route::get('/student/subject/{id}', [StudentController::class, 'viewSubject']);
+    Route::post('/student/subject/activity/{id}',[ActivityController::class , 'activityOfStudent']);
 });

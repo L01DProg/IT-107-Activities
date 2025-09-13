@@ -38,7 +38,7 @@ class AdminController extends Controller
             'message' => 'Successfully Create Admin',
             'admin' => $adminAccount,
             'adminInformation' => $adminInfo
-        ]);
+        ],200);
     }
 
     public function adminSignIn(Request $request) {
@@ -59,7 +59,7 @@ class AdminController extends Controller
             'message' => 'Login Successfully',
             'admin' => $admin,
             'token' => $token
-        ]);
+        ],200);
     }
 
     public function adminSignOut(Request $request) {
@@ -67,6 +67,6 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Logout Successfully'
-        ]);
+        ],200);
     }
 }

@@ -30,7 +30,7 @@ class TeacherController extends Controller
         if (!$admin instanceof Admin) {
             return response()->json([
                 'message' => 'Unauthenticated. Only Admin can Assign a Subject to a Teacher'
-            ]);
+            ],401);
         }
 
         $validatedData['password'] = Hash::make($validatedData['password']);
@@ -50,7 +50,7 @@ class TeacherController extends Controller
             'message' => 'Teacher Created Successfully',
             'teacher' => $teacher,
             'teacher_information' => $teacherInfo
-        ]);
+        ],200);
 
     }
 
@@ -72,7 +72,7 @@ class TeacherController extends Controller
             'message' => 'Login Successfully',
             'teacher' => $teacher,
             'token' => $token
-        ]);
+        ],200);
     }
 
 
@@ -81,6 +81,33 @@ class TeacherController extends Controller
 
         return response()->json([
             'message' => 'Logout Successfully'
-        ]);
+        ],200);
+    }
+
+    public function viewSubject(Request $request,$teacherId)
+    {
+        try {
+
+            $teacher = $request->user();
+
+            if(!$teacher instanceof Teacher) {
+                return response()->json([
+                    'message' , 'Unauthenticated. ONly Student view the subject',
+                ],401);
+            }
+
+            $teachers = Teacher::findOrFail($teacherId);
+
+            $teacherSubjects = $teachers->with(['subjects'])->get();
+
+            return response()->json([
+                'message' => 'Successfully fetched subjects for student.',
+                'subjects' => $teacherSubjects
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Student not found.'
+            ], 404);
+        }
     }
 }
