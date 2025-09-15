@@ -17,7 +17,7 @@ class SubjectController extends Controller
             'subject_name' => 'required'
         ]);
 
-
+        //secure that the admin can add subject
         $admin = $request->user();
 
         if (!$admin instanceof Admin) {
@@ -25,7 +25,8 @@ class SubjectController extends Controller
                 'message' => 'Unauthenticated. Only Admin can add subjects'
             ],401);
         }
-
+        
+        //check if the subject is already exists
         $checkSubject = Subject::where('subject_name',$request->subject_name)->first();
 
         if($checkSubject) {
@@ -52,7 +53,7 @@ class SubjectController extends Controller
             'subject_id' => 'required'
         ]);
 
-
+        //To secure that the admin can only assign subject to teachers
         $admin = $request->user();
 
         if (!$admin instanceof Admin) {
