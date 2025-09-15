@@ -14,7 +14,8 @@ class SubjectController extends Controller
     public function addSubject(Request $request)
     {
         $validatedData = $request->validate([
-            'subject_name' => 'required'
+            'subject_name' => 'required',
+            'description' => 'required'
         ]);
 
         //secure that the admin can add subject
@@ -37,6 +38,7 @@ class SubjectController extends Controller
 
         $subject = $admin->subject()->create([
             'subject_name' => $validatedData['subject_name'],
+            'description' => $validatedData['description'],
             'admin_id' => $admin->id
         ]);
 

@@ -31,4 +31,5 @@ Route::middleware('auth:sanctum')->group( function () {
     Route::post('/student/logout',[StudentController::class, 'studentSignOut']);
     Route::get('/student/subject/{id}', [StudentController::class, 'viewSubject']);
     Route::post('/student/subject/activity/{id}',[ActivityController::class , 'activityOfStudent']);
+    Route::get('/student/activities/{studentId}', [StudentController::class, 'viewActivities']);
 });

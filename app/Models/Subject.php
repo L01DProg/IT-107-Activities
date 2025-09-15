@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Subject extends Model
 {
     protected $fillable = [
-        'subject_name'
+        'subject_name',
+        'description'
     ];
 
     public function student(): BelongsToMany {

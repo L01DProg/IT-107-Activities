@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Admin;
 use App\Models\Student;
+use App\Models\Student_Activity;
 use App\Models\Student_information;
 use Error;
+use Illuminate\Container\Attributes\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -109,4 +112,35 @@ class StudentController extends Controller
             ], 404);
         }
     }
+
+    public function viewActivities(Request $request, $studentId)
+    {
+    
+
+        $authenticatedStudent = $request->user();
+
+        if (!$authenticatedStudent instanceof Student || $authenticatedStudent->id != $studentId) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        
+       
+        $activityIds = Student_Activity::where('student_id', $authenticatedStudent->id)
+                                    ->pluck('activity_id'); 
+
+       
+        $activities = Activity::whereIn('id', $activityIds)->get();
+
+        if ($activities->isEmpty()) {
+            return response()->json([
+                'message' => 'No activities found for this student.',
+                'activities' => []
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Successfully fetched all activities.',
+            'activities' => $activities
+        ]);
+    }
 }
+

@@ -55,4 +55,7 @@ class Student extends Authenticatable
         return $this->belongsToMany(Subject::class, 'student_subjects');
     }
 
+    public function activities(): BelongsToMany {
+        return $this->belongsToMany(Activity::class, 'student_activity', 'student_id', 'activity_id');
+    }
 }
