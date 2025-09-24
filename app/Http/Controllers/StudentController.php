@@ -9,48 +9,81 @@ use App\Models\Student_Activity;
 use App\Models\Student_information;
 use Error;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
-    public function studentRegister(Request $request, Student $students, Student_information $studentInformations)
+   
+    public function studentRegister(Request $request)
     {
-        $validatedData = $request->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
-            'date_of_birth' => 'required|date',
-            'address' => 'required|string',
-            'username' => 'required|string',
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
         
-        $admin = $request->user();
-
-        if (!$admin instanceof Admin) {
+        $user = $request->user();
+        if (!$user instanceof Admin) {
             return response()->json([
-                'message' => 'Unauthenticated. Only admin can Register the Students'
-            ],401);
+                'message' => 'Unauthenticated. Only admins can register students.'
+            ], 401);
         }
 
-        $validatedData['password'] = Hash::make($validatedData['password']);
-
-        $student = $students->create($validatedData);
         
-        $studentInformation = $studentInformations->create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'date_of_birth' => $request->date_of_birth,
-            'address' => $request->address,
-            'student_id' => $student->id
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'date_of_birth' => 'required|date',
+                'address' => 'required|string|max:255',
+                'profile' => 'nullable|image|mimes:png,jpeg,gif,svg,webp|max:2048', 
+                'username' => 'required|string|max:255|unique:students,username',
+                'email' => 'required|email|max:255|unique:students,email',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
+        
+        DB::beginTransaction();
+        try {
+            
+            $imagePath = null;
+            if ($request->hasFile('profile')) {
+                $imagePath = $request->file('profile')->store('profiles', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Successfully created Student Account',
-            'student' => $student,
-            'student_information' => $studentInformation
-        ],200);
+           
+            $student = Student::create([
+                'username' => $validatedData['username'],
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+                'profile' => $imagePath,
+            ]);
+
+            
+            $studentInformation = $student->information()->create([
+                'first_name' => $validatedData['first_name'],
+                'last_name' => $validatedData['last_name'],
+                'date_of_birth' => $validatedData['date_of_birth'],
+                'address' => $validatedData['address'],
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Successfully created student account.',
+                'student' => $student,
+                'student_information' => $studentInformation,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to create student account.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function studentSignIn(Request $request)
@@ -70,8 +103,8 @@ class StudentController extends Controller
 
         return response()->json([
             'message' => 'Login Successfully',
-            'token' => $token,
-            'student' => $student
+            'Token' => $token,
+            'User' => $student
         ],200);
     }
 
