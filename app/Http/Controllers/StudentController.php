@@ -8,7 +8,6 @@ use App\Models\Student;
 use App\Models\Student_Activity;
 use App\Models\Student_information;
 use Error;
-use Illuminate\Container\Attributes\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 

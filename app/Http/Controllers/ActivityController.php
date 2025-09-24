@@ -18,33 +18,39 @@ class ActivityController extends Controller
             'submission' => 'nullable|date',
         ]);
 
-        $teacher = $request->user();
+        try{
+            $teacher = $request->user();
 
-        if(!$teacher instanceof Teacher) {
+            if(!$teacher instanceof Teacher) {
+                return response()->json([
+                    'message' => 'Unauthorized. Only Teacher can create Activity',
+                ],403);
+            }
+            
+            $subject = Subject::findOrFail($subjectId);
+
+            $checkSubject = Student_subject::where('subject_id',$subject->id)->first();
+
+            $activity = Activity::create([
+                'title' => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'submission' => $validatedData['submission'],
+                'subject_id' => $subject->id
+            ]);
+
+            $studentActivity = Student_Activity::create([
+                'student_id' => $checkSubject->student_id,
+                'activity_id' => $activity->id
+            ]);
+
             return response()->json([
-                'message' => 'Unauthenticated. Only Teacher can create Activity',
-            ],401);
+                'message' => 'Successfully Create Activity',
+                'activity' => $activity
+            ],200);
+        }catch(\Exception $e) {
+            return response()->json([
+                'message' => 'Failed To Create Activity'
+            ],500);
         }
-        
-        $subject = Subject::findOrFail($subjectId);
-
-        $checkSubject = Student_subject::where('subject_id',$subject->id)->first();
-
-        $activity = Activity::create([
-            'title' => $validatedData['title'],
-            'description' => $validatedData['description'],
-            'submission' => $validatedData['submission'],
-            'subject_id' => $subject->id
-        ]);
-
-        $studentActivity = Student_Activity::create([
-            'student_id' => $checkSubject->student_id,
-            'activity_id' => $activity->id
-        ]);
-
-        return response()->json([
-            'message' => 'Successfully Create Activity',
-            'activity' => $activity
-        ],200);
     }
 }

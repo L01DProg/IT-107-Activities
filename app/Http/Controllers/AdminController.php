@@ -21,24 +21,30 @@ class AdminController extends Controller
             'password' => 'required'
         ]);
 
-        $validatedData['password'] = Hash::make($validatedData['password']);
+        try{
+            $validatedData['password'] = Hash::make($validatedData['password']);
 
-        $adminAccount = $admins->create($validatedData);
-        
-        $adminInfo = $adminInformation->create([
-            'admin_id' => $adminAccount->id,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'date_of_birth' => $request->date_of_birth,
-            'address' => $request->address
-        ]);
+            $adminAccount = $admins->create($validatedData);
+            
+            $adminInfo = $adminInformation->create([
+                'admin_id' => $adminAccount->id,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'date_of_birth' => $request->date_of_birth,
+                'address' => $request->address
+            ]);
 
 
-        return response()->json([
-            'message' => 'Successfully Create Admin',
-            'admin' => $adminAccount,
-            'adminInformation' => $adminInfo
-        ],200);
+            return response()->json([
+                'message' => 'Successfully Create Admin',
+                'admin' => $adminAccount,
+                'adminInformation' => $adminInfo
+            ],200);
+        }catch(\Exception $e) {
+            return response()->json([
+                'message' => 'Failed To create Admin',
+            ],500);
+        }
     }
 
     public function adminSignIn(Request $request) {
@@ -47,19 +53,25 @@ class AdminController extends Controller
             'password' => 'required'
         ]);
 
-        $admin = Admin::where('email', $request->email)->first();
+        try{
+            $admin = Admin::where('email', $request->email)->first();
 
-        if(!$admin || !Hash::check($request->password,$admin->password)) {
-            throw new Error('Incorrect Email or Password');
+            if(!$admin || !Hash::check($request->password,$admin->password)) {
+                throw new Error('Incorrect Email or Password');
+            }
+
+            $token = $admin->createToken('admin-auth-token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Login Successfully',
+                'admin' => $admin,
+                'token' => $token
+            ],200);
+        }catch(\Exception $e) {
+            return response()->json([
+                'message' => 'Failed To Sign In Account Server Error'
+            ],500);
         }
-
-        $token = $admin->createToken('admin-auth-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login Successfully',
-            'admin' => $admin,
-            'token' => $token
-        ],200);
     }
 
     public function adminSignOut(Request $request) {

@@ -18,34 +18,40 @@ class SubjectController extends Controller
             'description' => 'required'
         ]);
 
-        //secure that the admin can add subject
-        $admin = $request->user();
+        try{
+            
+            $admin = $request->user();
 
-        if (!$admin instanceof Admin) {
-            return response()->json([
-                'message' => 'Unauthenticated. Only Admin can add subjects'
-            ],401);
-        }
-        
-        //check if the subject is already exists
-        $checkSubject = Subject::where('subject_name',$request->subject_name)->first();
+            if (!$admin instanceof Admin) {
+                return response()->json([
+                    'message' => 'Unauthenticated. Only Admin can add subjects'
+                ],401);
+            }
+            
+           
+            $checkSubject = Subject::where('subject_name',$request->subject_name)->first();
 
-        if($checkSubject) {
+            if($checkSubject) {
+                return response()->json([
+                    'message' => 'Subject Already Exists'
+                ],500);
+            }
+
+            $subject = $admin->subject()->create([
+                'subject_name' => $validatedData['subject_name'],
+                'description' => $validatedData['description'],
+                'admin_id' => $admin->id
+            ]);
+
             return response()->json([
-                'message' => 'Subject Already Exists'
+                'message' => 'Successfully added Subject',
+                'subject' => $subject
+            ],200);
+        }catch(\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create subject'
             ],500);
         }
-
-        $subject = $admin->subject()->create([
-            'subject_name' => $validatedData['subject_name'],
-            'description' => $validatedData['description'],
-            'admin_id' => $admin->id
-        ]);
-
-        return response()->json([
-            'message' => 'Successfully added Subject',
-            'subject' => $subject
-        ],200);
     }
 
     public function assignSubjectTeacher(Request $request)
@@ -55,31 +61,37 @@ class SubjectController extends Controller
             'subject_id' => 'required'
         ]);
 
-        //To secure that the admin can only assign subject to teachers
-        $admin = $request->user();
+       try{
+        
+            $admin = $request->user();
 
-        if (!$admin instanceof Admin) {
+            if (!$admin instanceof Admin) {
+                return response()->json([
+                    'message' => 'Unauthenticated. Only Admin can Assign a Subject to a Teacher'
+                ],401);
+            }
+
+            $checkSubject = Teacher__subject::where('subject_id', $request->subject_id)
+                                            ->where('teacher_id', $request->teacher_id)
+                                            ->get();
+
+            if (count($checkSubject)) {
+                return response()->json([
+                    'message' => 'Already Exist subject'
+                ], 500);
+            }
+
+            $subjectOfTeacher = Teacher__subject::create($validatedData);
+
             return response()->json([
-                'message' => 'Unauthenticated. Only Admin can Assign a Subject to a Teacher'
-            ],401);
-        }
-
-        $checkSubject = Teacher__subject::where('subject_id', $request->subject_id)
-                                        ->where('teacher_id', $request->teacher_id)
-                                        ->get();
-
-        if (count($checkSubject)) {
-            return response()->json([
-                'message' => 'Already Exist subject'
-            ], 500);
-        }
-
-        $subjectOfTeacher = Teacher__subject::create($validatedData);
-
+                'message' => 'Successfully Assign to Teacher',
+                'teacherSubject' => $subjectOfTeacher
+            ]);
+       }catch(\Exception $e) {
         return response()->json([
-            'message' => 'Successfully Assign to Teacher',
-            'teacherSubject' => $subjectOfTeacher
-        ]);
+            'message' => 'Failed Server Error'
+        ],500);
+       }
     }
 
     public function studentSubject(Request $request)
@@ -89,30 +101,36 @@ class SubjectController extends Controller
             'student_id' => 'required'
         ]);
 
-        $teacher = $request->user();
+        try{
+            $teacher = $request->user();
 
-        if (!$teacher instanceof Teacher) {
+            if (!$teacher instanceof Teacher) {
+                return response()->json([
+                    'message' => 'Unauthorized. Only Teacher can assign subject to students'
+                ],403);
+            }
+
+            $checkSubject = Student_subject::where('subject_id', $request->subject_id)
+                                            ->where('student_id', $request->student_id)
+                                            ->get();
+
+            if (count($checkSubject)) {
+                return response()->json([
+                    'message' => 'Already Exist subject'
+                ], 500);
+            }
+
+            $studentSubject = Student_subject::create($validatedData);
+
+
             return response()->json([
-                'message' => 'Unauthenticated. Only Teacher can assign subject to students'
-            ],401);
-        }
-
-         $checkSubject = Student_subject::where('subject_id', $request->subject_id)
-                                        ->where('student_id', $request->student_id)
-                                        ->get();
-
-        if (count($checkSubject)) {
+                'message' => 'Successfully Assign to Student',
+                'subject' => $studentSubject
+            ],200);
+        }catch(\Exception $e) {
             return response()->json([
-                'message' => 'Already Exist subject'
-            ], 500);
+                'message' => 'Failed Server Error'
+            ],500);
         }
-
-        $studentSubject = Student_subject::create($validatedData);
-
-
-        return response()->json([
-            'message' => 'Successfully Assign to Student',
-            'subject' => $studentSubject
-        ],200);
     }
 }

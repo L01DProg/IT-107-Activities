@@ -21,6 +21,6 @@ class Activity extends Model
 
     public function student(): BelongsToMany
     {
-        return $this->belongsToMany(Student::class, 'student_activity', 'activity_id', 'student_id');
+        return $this->belongsToMany(Student::class, 'student_activity');
     }
 }
